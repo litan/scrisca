@@ -1,0 +1,92 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="scrisca" default="publish" basedir=".">
+
+	<property name="scala.version" value="2.7.1" />
+	<property name="scala.home" value="." />
+	<property name="scala-compiler.jar" value="${scala.home}/lib/scala-compiler-${scala.version}.jar" />
+	<property name="scala-library.jar" value="${scala.home}/lib/scala-library-${scala.version}.jar" />
+
+	<property name="build" location="target" />
+	<property name="build.classes" location="${build}/classes" />
+	<property name="lib" location="lib" />
+	<property name="work" location="work" />
+	<property name="src.main.scala" location="src/main/scala" />
+	<property name="src.test.scala" location="src/test/scala" />
+	<property name="version" value="0.1" />
+
+	<path id="classpath">
+		<pathelement location="${build.classes}" />
+	</path>
+
+	<path id="test.classpath">
+		<path refid="classpath" />
+		<fileset dir="${lib}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<path id="scala.classpath">
+		<pathelement location="${scala-compiler.jar}" />
+		<pathelement location="${scala-library.jar}" />
+	</path>
+
+	<target name="clean" description="clean up">
+		<delete dir="${build}" />
+		<delete dir="${lib}" />
+	</target>
+
+	<target name="resolve" description="--> retrieve dependencies with ivy">
+		<ivy:settings file="ivysettings.xml" />
+		<ivy:retrieve />
+	</target>
+
+	<target name="init" depends="resolve">
+		<available file="${scala-compiler.jar}" property="scala.tools.present" />
+		<fail message="Unable to locate Scala tools; this build file assumes - 
+			that the lib dir is present right under SCALA_HOME. Is that accurate?" unless="scala.tools.present" />
+
+		<taskdef resource="scala/tools/ant/antlib.xml">
+			<classpath refid="scala.classpath" />
+		</taskdef>
+
+		<mkdir dir="${build}" />
+		<mkdir dir="${build.classes}" />
+		<mkdir dir="${work}" />
+	</target>
+
+	<target name="compile" depends="init">
+		<scalac srcdir="${src.main.scala}" destdir="${build.classes}" force="changed" addparams="">
+			<classpath>
+				<path refid="scala.classpath" />
+				<path refid="classpath" />
+			</classpath>
+			<include name="**/*.scala" />
+		</scalac>
+		<scalac srcdir="${src.test.scala}" destdir="${build.classes}" force="changed" addparams="">
+			<classpath>
+				<path refid="scala.classpath" />
+				<path refid="test.classpath" />
+			</classpath>
+			<include name="**/*.scala" />
+		</scalac>
+	</target>
+
+	<target name="test" depends="compile">
+		<junit printsummary="yes" showoutput="yes" dir="${build.classes}" fork="yes">
+			<formatter type="plain" />
+			<test name="net.xofar.scrisca.proc.TestProcess" haltonfailure="yes" outfile="testreport" />
+			<classpath>
+				<path refid="scala.classpath" />
+				<path refid="test.classpath" />
+			</classpath>
+		</junit>
+	</target>
+
+	<target name="jar" depends="test">
+		<jar jarfile="${build}/scrisca.jar" basedir="${build.classes}" />
+	</target>
+
+	<target name="publish" depends="jar" description="--> compile test and publish this project in the local ivy repository">
+		<ivy:publish artifactspattern="${build}/[artifact].[ext]" resolver="chained" pubrevision="${version}" status="release" overwrite="true" />
+		<echo message="project ${ant.project.name} released with version ${revision}" />
+	</target>
+</project>

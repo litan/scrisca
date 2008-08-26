@@ -1,4 +1,6 @@
 .manager/
 ecbuild
+bin
+lib
 target
 *.*~

@@ -1,0 +1,18 @@
+<ivy-module version="2.0">
+	<info organisation="net/xofar" module="scrisca" />
+	<configurations defaultconfmapping="runtime->*">
+		<conf name="compile" />
+		<conf name="build" />
+		<conf name="test" extends="compile" />
+	</configurations>
+	<publications>
+		<artifact name="scrisca" type="jar" conf="build" ext="jar" />
+	</publications>
+	<dependencies>
+		<dependency org="junit" name="junit" rev="4.4" conf="test->*" />
+		<dependency org="org.scala-lang" name="scala-library"
+			rev="2.7.1" conf="build->*" />
+		<dependency org="org.scala-lang" name="scala-compiler"
+			rev="2.7.1" conf="build->*" />
+</dependencies>
+</ivy-module>
