@@ -4,7 +4,7 @@
 		<chain name="chained">
 			<filesystem name="libraries">
 				<artifact
-					pattern="${user.home}/.ivy2/local/repository/[artifact]-[revision].[ext]" />
+					pattern="${user.home}/.ivy2/local/repository/[module]/[artifact]-[revision].[ext]" />
 			</filesystem>
 			<ibiblio name="ibiblio" m2compatible="true" />
 			<url name="scala" m2compatible="true">

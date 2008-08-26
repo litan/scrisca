@@ -18,15 +18,112 @@ import java.util.Map
 import java.util.concurrent.CountDownLatch
 
 object Process {
+
+  implicit def dirName2dir(name: String): File = new File(name)
+  implicit def enrichProcessBuilder(pb: ProcessBuilder)= new RichProcessBuilder(pb)
   
-  class StreamLink(source: InputStream, dest: OutputStream, latch: Option[CountDownLatch]) extends Runnable {
+  /**
+   * Enriched Process Builder with exec methods that return process output and exit code
+   */
+  class RichProcessBuilder(pb: ProcessBuilder) {
+    
+    /**
+     * Execs the process specified by the builder. Returns the combined stdout and stderr 
+     * as a String; also returns the exit code 
+     */
+    def exec(): (String, Int) = {
+      try {
+        if (!pb.directory.exists) throw new IllegalArgumentException("Invalid Working Dir")
+
+        pb.redirectErrorStream(true)
+        val stdout = new ByteArrayOutputStream();
+
+        val proc = pb.start                                  
+      
+        new StreamLink(proc.getInputStream, stdout, None).run
+
+        val retCode = proc.waitFor
+        val output =  new String(stdout.toByteArray(), "UTF8");
+        return (output, retCode);
+      }
+      catch {
+      case e: Throwable => return (e.getMessage, -1)
+      }
+    }
+    
+    /**
+     * Execs the process specified by the builder. Returns stdout and stderr 
+     * as Strings; also returns the exit code 
+     */
+    def execx(): (String, String, Int) = {
+      try {
+        if (!pb.directory.exists) throw new IllegalArgumentException("Invalid Working Dir")
+        
+        pb.redirectErrorStream(false)
+        val stdout = new ByteArrayOutputStream();
+        val stderr = new ByteArrayOutputStream();
+        val latch = new CountDownLatch(1)
+	
+        val proc = pb.start                                  
+	      
+        new StreamLink(proc.getInputStream, stdout, None).run
+	      
+        new Thread(new StreamLink(proc.getErrorStream, stderr, Some(latch))).start
+        latch.await
+       
+        val retCode = proc.waitFor
+        val output =  new String(stdout.toByteArray(), "UTF8");
+        val error =  new String(stderr.toByteArray(), "UTF8");
+        return (output, error, retCode);
+      }
+      catch {
+      case e: Throwable => return ("", e.getMessage, -1)
+      }
+    }
+  }
+  
+  /**
+   * Execs the process specified by the command. Returns the combined stdout and stderr 
+   * as a String; also returns the exit code 
+   */
+  def exec(cmd: String): (String, Int) = exec(cmd, ".")
+  
+  /**
+   * Execs the process specified by the command in the specified working directory. Returns 
+   * the combined stdout and stderr as a String; also returns the exit code 
+   */
+  def exec(cmd: String, dir: String): (String, Int) = {
+    val pb = new ProcessBuilder(cmd.split(' '))
+    pb.directory(dir)
+    pb.exec
+  }
+  
+  /**
+   * Execs the process specified by the command. Returns stdout and stderr 
+   * as Strings; also returns the exit code 
+   */
+  def execx(cmd: String): (String, String, Int) = execx(cmd, ".")
+  
+  /**
+   * Execs the process specified by the command in the specified working directory. Returns 
+   * stdout and stderr as Strings; also returns the exit code 
+   */
+  def execx(cmd: String, dir: String): (String, String, Int) = {
+    val pb = new ProcessBuilder(cmd.split(' '))
+    pb.directory(dir)
+    pb.execx
+  }
+  
+  private class StreamLink(source: InputStream, dest: OutputStream, latch: Option[CountDownLatch]) extends Runnable {
+    private val BUF_SIZE = 1024
     def run = {
       val bSrc = new BufferedInputStream(source)
       val dst = new BufferedOutputStream(dest)
-      var byte = 0;
+      var buffer = new Array[Byte](BUF_SIZE)
+      var bread = 0
       try {
-        while ({byte = bSrc.read(); byte != -1}) {
-          dst.write(byte)
+        while ({bread = bSrc.read(buffer); bread != -1}) {
+          dst.write(buffer, 0, bread)
         }
       }
       catch {
@@ -37,58 +134,5 @@ object Process {
         latch.foreach {_.countDown}
       }
     }
-  }
-
-  def exec(cmd: String): (String, Int) = exec(cmd, ".")
-  def execx(cmd: String): (String, String, Int) = execx(cmd, ".")
-
-  def exec(cmd: String, dir: String): (String, Int) = {
-    try {
-      val out = new ByteArrayOutputStream();
-      val retCode = exec(cmd, dir, out, out);
-      
-      val output =  new String(out.toByteArray(), "UTF8");
-      return (output, retCode);
-    }
-    catch {
-    case e: Throwable => return (e.getMessage, -1)
-    }
-  }
-  
-  def execx(cmd: String, dir: String): (String, String, Int) = {
-    try {
-      val out = new ByteArrayOutputStream();
-      val err = new ByteArrayOutputStream();
-      val retCode = exec(cmd, dir, out, err);
-      
-      val output =  new String(out.toByteArray(), "UTF8");
-      val error =  new String(err.toByteArray(), "UTF8");
-      return (output, error, retCode);
-    }
-    catch {
-    case e: Throwable => return ("", e.getMessage, -1)
-    }
-  }
-  
-  def exec(cmd: String, dir: String, stdout: OutputStream, stderr: OutputStream): Int = {
-    
-      val workingDir = new File(dir)
-      if (!workingDir.exists) throw new IllegalArgumentException("Invalid Working Dir")
-
-      // val proc = Runtime.getRuntime().exec(cmd, null, workingDir)
-      val pb = new ProcessBuilder(cmd.split(' '))
-      pb.directory(workingDir)
-      if (stdout == stderr) pb.redirectErrorStream(true)
-      val proc = pb.start                                  
-      
-      new StreamLink(proc.getInputStream, stdout, None).run
-      
-      if (!pb.redirectErrorStream) {
-        val latch = new CountDownLatch(1)
-        new Thread(new StreamLink(proc.getErrorStream, stderr, Some(latch))).start
-        latch.await
-      }
-
-      proc.waitFor
   }
 }

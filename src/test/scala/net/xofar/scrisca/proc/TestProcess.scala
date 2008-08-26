@@ -18,24 +18,26 @@ import org.junit._
 import org.junit.Assert._
 
 class TestProcess {
+  
+  val cmd = "java -cp \"" + System.getProperty("java.class.path") + "\" net.xofar.scrisca.proc.ExecedProcess"
+  
   @Test
   def testHappyExec: Unit = {
-    val out = Process.exec("scala.bat net.xofar.scrisca.proc.ExecedProcess")
+    val out = Process.exec(cmd)
     assertEquals(ExecedProcess.OUT_STR + ExecedProcess.ERR_STR, out._1)
     assertEquals(0, out._2)
   }
   
   @Test
   def testErrorExec: Unit = {
-    val out = Process.exec("scala.bat net.xofar.scrisca.proc.ExecedProcess errorTrigger")
+    val out = Process.exec(cmd + " errorTrigger")
     assertEquals("", out._1)
-    // assertEquals(-1, out._2) // scala.bat seems to not propogate the -1 that we expect 
-    assertEquals(0, out._2) // scala.bat seems to not return the -1 
+    assertEquals(-1, out._2) 
   }
   
   @Test
   def testExecStreams: Unit = {
-    val out = Process.execx("scala.bat net.xofar.scrisca.proc.ExecedProcess")
+    val out = Process.execx(cmd)
     assertEquals(ExecedProcess.OUT_STR, out._1)
     assertEquals(ExecedProcess.ERR_STR, out._2)
     assertEquals(0, out._3)
