@@ -31,7 +31,7 @@ object Process {
    * returns the exit code 
    */
   def exec(cmd: String, in: InputStream): (String, Int) = {
-    val pb = new ProcessBuilder(cmd.split(' '))
+    val pb = new ProcessBuilder(split(cmd))
     pb.directory(".")
     pb.redirectErrorStream(true)
     val ret = pb.exec(Some(in))
@@ -43,7 +43,7 @@ object Process {
    * the combined stdout and stderr as a String; also returns the exit code 
    */
   def exec(cmd: String, dir: String): (String, Int) = {
-    val pb = new ProcessBuilder(cmd.split(' '))
+    val pb = new ProcessBuilder(split(cmd))
     pb.directory(dir)
     pb.redirectErrorStream(true)
     val ret = pb.exec(None)
@@ -61,7 +61,7 @@ object Process {
    * stdout and stderr as Strings; also returns the exit code 
    */
   def execx(cmd: String, dir: String): (String, String, Int) = {
-    val pb = new ProcessBuilder(cmd.split(' '))
+    val pb = new ProcessBuilder(split(cmd))
     pb.directory(dir)
     pb.redirectErrorStream(false)
     val ret = pb.exec(None)
@@ -69,13 +69,15 @@ object Process {
   }
   
   def pipeExec(cmd: String): Unit = {
-    val pb = new ProcessBuilder(cmd.split(' '))
+    val pb = new ProcessBuilder(split(cmd))
     pb.directory(".")
     pb.redirectErrorStream(false)
     pb.exec(Some(System.in), System.out, Some(System.err))
     // our system.in is gone with the dead execed proc; nothing to do but bail
     System.exit(0)
   }
+  
+  private def split(cmd: String): Array[String] = cmd.split("\\s+")
 
   implicit def dirName2dir(name: String): File = new File(name)
   implicit def enrichProcessBuilder(pb: ProcessBuilder)= new RichProcessBuilder(pb)
