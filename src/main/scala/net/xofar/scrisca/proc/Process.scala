@@ -36,14 +36,14 @@ object Process {
         if (!pb.directory.exists) throw new IllegalArgumentException("Invalid Working Dir")
 
         pb.redirectErrorStream(true)
-        val stdout = new ByteArrayOutputStream();
+        val stdout = new ByteArrayOutputStream()
 
         val proc = pb.start                                  
       
         new StreamLink(proc.getInputStream, stdout, None).run
 
         val retCode = proc.waitFor
-        val output =  new String(stdout.toByteArray(), "UTF8");
+        val output =  new String(stdout.toByteArray(), "UTF8")
         return (output, retCode);
       }
       catch {
@@ -60,8 +60,8 @@ object Process {
         if (!pb.directory.exists) throw new IllegalArgumentException("Invalid Working Dir")
         
         pb.redirectErrorStream(false)
-        val stdout = new ByteArrayOutputStream();
-        val stderr = new ByteArrayOutputStream();
+        val stdout = new ByteArrayOutputStream()
+        val stderr = new ByteArrayOutputStream()
         val latch = new CountDownLatch(1)
 	
         val proc = pb.start                                  
@@ -72,12 +72,34 @@ object Process {
         latch.await
        
         val retCode = proc.waitFor
-        val output =  new String(stdout.toByteArray(), "UTF8");
-        val error =  new String(stderr.toByteArray(), "UTF8");
+        val output =  new String(stdout.toByteArray(), "UTF8")
+        val error =  new String(stderr.toByteArray(), "UTF8")
         return (output, error, retCode);
       }
       catch {
       case e: Throwable => return ("", e.getMessage, -1)
+      }
+    }
+    
+    def pipeExec(): Unit = {
+      try {
+        if (!pb.directory.exists) throw new IllegalArgumentException("Invalid Working Dir")
+        
+        pb.redirectErrorStream(false)
+        val latch = new CountDownLatch(2)
+	
+        val proc = pb.start                                  
+	      
+        new Thread(new StreamLink(proc.getInputStream, System.out, Some(latch))).start
+        new Thread(new StreamLink(proc.getErrorStream, System.err, Some(latch))).start
+        new Thread(new StreamLink(System.in, proc.getOutputStream, None)).start
+        
+        latch.await
+        proc.waitFor
+        System.exit(0)
+      }
+      catch {
+      case e: Throwable => e.printStackTrace
       }
     }
   }
@@ -114,6 +136,13 @@ object Process {
     pb.execx
   }
   
+  def pipeExec(cmd: String): Unit = {
+    val pb = new ProcessBuilder(cmd.split(' '))
+    pb.directory(".")
+    pb.pipeExec
+  }
+  
+  
   private class StreamLink(source: InputStream, dest: OutputStream, latch: Option[CountDownLatch]) extends Runnable {
     private val BUF_SIZE = 1024
     def run = {
@@ -123,16 +152,35 @@ object Process {
       var bread = 0
       try {
         while ({bread = bSrc.read(buffer); bread != -1}) {
+          // println("StreamLink read: " + new String(buffer))
           dst.write(buffer, 0, bread)
+          dst.flush
         }
       }
       catch {
       case e: Throwable => dst.write(e.getMessage.getBytes("UTF8")) 
       }
       finally {
+        println("StreamLink done")
         dst.flush
         latch.foreach {_.countDown}
       }
     }
+  }
+  
+  def main(args: Array[String]): Unit = {
+    
+    if(args.size != 1) {
+      println("Usage: Process cmd")
+      System.exit(-1)
+    }
+    
+    pipeExec(args(0))
+    
+    // pipeExec("ghci")
+    // pipeExec("irb.bat")
+    // pipeExec("scala.bat")            
+    // pipeExec("C:\\cygwin\\bin\\echo hi there djfasfk sdafjasdkljfsda sadkfjaksldf sdafjaksdf")
+    // println(exec("C:\\cygwin\\bin\\echo hi there")._1)
   }
 }

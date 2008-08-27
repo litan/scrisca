@@ -17,8 +17,11 @@ package net.xofar.scrisca.scalac
 import java.io.File
 import xml._
 import proc._
+import eclipse._
 
-
+/**
+ * Runs scalac with eclipse classpath for a project - on a given file with given options  
+ */
 object Scalipse {
   def main(args : Array[String]) : Unit = {
     
@@ -32,30 +35,14 @@ object Scalipse {
     
     val scalaArgs = sb.toString
     
-    val cmdLine = "scalac.bat" + scalaArgs + "-cp " + getClassPath(loadProjectXml(eclipseProjectLoc), eclipseProjectLoc) + scalaFile
+    val cmdLine = "scalac.bat" + scalaArgs + "-cp " + CpXtractor.extract(eclipseProjectLoc) + scalaFile
     // println("Scalac Wrapper Executing: " + cmdLine )
     
-      val result = Process.exec(cmdLine, eclipseProjectLoc)
-      println(result._1)
+    val result = Process.exec(cmdLine, eclipseProjectLoc)
+    println(result._1)
   }
   
   def usage() {
     println("Usage: Scalac eclipseProjectLocation scalaFile scalaArgs")
-  }
-  
-  def loadProjectXml(projectLoc: String): Elem = XML.loadFile(projectLoc + "/.classpath")
-  
-  def getClassPath(rootElem: Elem, projectLoc: String): String = {
-    val cpes = rootElem \ "classpathentry"
-    val paths = cpes.filter(e => List("lib", "output").contains((e \ "@kind").toString)) \\ "@path"
-    val sb = new StringBuilder
-    paths.foreach(f => {
-      val file = new File(f.toString)
-      if (file.isAbsolute)
-        sb.append(file.getAbsolutePath + ";")
-      else
-          sb.append(new File(projectLoc, f.toString).getAbsolutePath + ";")
-    })
-    sb.toString
   }
 }
