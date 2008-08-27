@@ -153,7 +153,7 @@ object Process {
       try {
         while ({bread = bSrc.read(buffer); bread != -1}) {
           // println("StreamLink read: " + new String(buffer))
-          println(dxn)
+          // println(dxn)
           dst.write(buffer, 0, bread)
           dst.flush
         }
@@ -162,7 +162,7 @@ object Process {
       case e: Throwable => dst.write(e.getMessage.getBytes("UTF8")) 
       }
       finally {
-        println("StreamLink done")
+        // println("StreamLink done")
         dst.flush
         latch.foreach {_.countDown}
       }

@@ -75,7 +75,7 @@
 	</target>
 
 	<target name="test" depends="compile">
-		<junit printsummary="yes" showoutput="yes" fork="yes">
+		<junit printsummary="yes" showoutput="yes" fork="yes" dir="${build.classes}">
 			<formatter type="plain" />
 			<test name="net.xofar.scrisca.proc.TestProcess" haltonfailure="yes" outfile="testreport" />
 			<classpath>
