@@ -16,31 +16,105 @@ package net.xofar.scrisca.proc
 
 import org.junit._
 import org.junit.Assert._
-import java.io.File
+import java.io._
+import java.util.concurrent.CountDownLatch
 
 class TestProcess {
   
-  val cmd = "java -cp \"." + File.pathSeparator + System.getProperty("java.class.path") + "\" net.xofar.scrisca.proc.ExecedProcess"
+  val prefix = "java -cp \"." + File.pathSeparator + System.getProperty("java.class.path") + "\"" 
+  val cmd =  prefix + " net.xofar.scrisca.proc.ExecedProcess"
+  val echocmd =  prefix + " net.xofar.scrisca.proc.EchoProcess"
   
   @Test
-  def testHappyExec: Unit = {
+  def testHappyExec {
     val out = Process.exec(cmd)
     assertEquals(ExecedProcess.OUT_STR + ExecedProcess.ERR_STR, out._1)
     assertEquals(0, out._2)
   }
   
   @Test
-  def testErrorExec: Unit = {
+  def testErrorExec {
     val out = Process.exec(cmd + " errorTrigger")
     assertEquals("", out._1)
     // assertEquals(-1, out._2) // not reliable across OSs 
   }
   
   @Test
-  def testExecStreams: Unit = {
+  def testExecStreams {
     val out = Process.execx(cmd)
     assertEquals(ExecedProcess.OUT_STR, out._1)
     assertEquals(ExecedProcess.ERR_STR, out._2)
     assertEquals(0, out._3)
   }
+  
+  @Test
+  def testStreamLinkSmallData {
+    streamLinkTestHelper(smallDataset)
+  }
+  
+  @Test
+  def testStreamLinkMediumData {
+    streamLinkTestHelper(mediumDataset)
+  }
+  
+  @Test
+  def testStreamLinkLargeData {
+    streamLinkTestHelper(largeDataset)
+  }
+  
+  @Test
+  def testEchoSmallData {
+    echoDataTestHelper(smallDataset)
+  }
+  
+  @Test
+  def testEchoMediumData {
+    echoDataTestHelper(mediumDataset)
+  }
+  
+  @Test
+  def testEchoLargeData {
+    echoDataTestHelper(largeDataset)
+  }
+  
+  def echoDataTestHelper(dataSet: String) {
+    val is = new ByteArrayInputStream(dataSet.getBytes("UTF8"))
+    val out = Process.exec(echocmd, is)
+    assertEquals(dataSet, out._1.trim) // echo puts an extra newline at end
+    assertEquals(dataSet.size, out._1.size-1) // echo puts an extra newline at end
+  }
+  
+  def streamLinkTestHelper(dataSet: String) {
+    val os = new ByteArrayOutputStream
+    val is = new ByteArrayInputStream(dataSet.getBytes("UTF8"))
+    val latch = new CountDownLatch(1)
+    val sl = new Process.StreamLink(is, os, Some(latch), "*")
+    new Thread(sl).start
+    latch.await
+    assertEquals(dataSet, new String(os.toByteArray, "UTF8"))
+  }
+  
+  val smallDataset = "some random text;"
+  val mediumDataset = """some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;"""
+  
+  val largeDataset = """some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;some random text;some random text;some random text;
+                      some random text;"""
+  
 }
