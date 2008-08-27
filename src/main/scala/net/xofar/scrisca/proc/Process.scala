@@ -40,7 +40,7 @@ object Process {
 
         val proc = pb.start                                  
       
-        new StreamLink(proc.getInputStream, stdout, None).run
+        new StreamLink(proc.getInputStream, stdout, None, "<").run
 
         val retCode = proc.waitFor
         val output =  new String(stdout.toByteArray(), "UTF8")
@@ -66,9 +66,9 @@ object Process {
 	
         val proc = pb.start                                  
 	      
-        new StreamLink(proc.getInputStream, stdout, None).run
+        new StreamLink(proc.getInputStream, stdout, None, "<").run
 	      
-        new Thread(new StreamLink(proc.getErrorStream, stderr, Some(latch))).start
+        new Thread(new StreamLink(proc.getErrorStream, stderr, Some(latch), "<<")).start
         latch.await
        
         val retCode = proc.waitFor
@@ -90,9 +90,9 @@ object Process {
 	
         val proc = pb.start                                  
 	      
-        new Thread(new StreamLink(proc.getInputStream, System.out, Some(latch))).start
-        new Thread(new StreamLink(proc.getErrorStream, System.err, Some(latch))).start
-        new Thread(new StreamLink(System.in, proc.getOutputStream, None)).start
+        new Thread(new StreamLink(proc.getInputStream, System.out, Some(latch), "<")).start
+        new Thread(new StreamLink(proc.getErrorStream, System.err, Some(latch), "<<")).start
+        new Thread(new StreamLink(System.in, proc.getOutputStream, None, ">")).start
         
         latch.await
         proc.waitFor
@@ -143,7 +143,7 @@ object Process {
   }
   
   
-  private class StreamLink(source: InputStream, dest: OutputStream, latch: Option[CountDownLatch]) extends Runnable {
+  private class StreamLink(source: InputStream, dest: OutputStream, latch: Option[CountDownLatch], dxn: String) extends Runnable {
     private val BUF_SIZE = 1024
     def run = {
       val bSrc = new BufferedInputStream(source)
@@ -153,6 +153,7 @@ object Process {
       try {
         while ({bread = bSrc.read(buffer); bread != -1}) {
           // println("StreamLink read: " + new String(buffer))
+          println(dxn)
           dst.write(buffer, 0, bread)
           dst.flush
         }
@@ -177,9 +178,9 @@ object Process {
     
     pipeExec(args(0))
     
+    // pipeExec("scala.bat")
     // pipeExec("ghci")
-    // pipeExec("irb.bat")
-    // pipeExec("scala.bat")            
+    // pipeExec("irb.bat")            
     // pipeExec("C:\\cygwin\\bin\\echo hi there djfasfk sdafjasdkljfsda sadkfjaksldf sdafjaksdf")
     // println(exec("C:\\cygwin\\bin\\echo hi there")._1)
   }
