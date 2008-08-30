@@ -14,7 +14,7 @@
  */
 package net.xofar.scrisca.io
 
-import java.io.File
+import java.io._
 import scala.io.Source
 
 // Work in progress. Not meant to be used yet 
@@ -38,12 +38,30 @@ object Dir {
   def readFile(f: File): String = {
     println("Reading file: " + f)
     val sb = new StringBuilder()
-    Source.fromFile(f).getLines.foreach {line => sb ++= line}
-    sb.toString
+    val fis = new BufferedInputStream(new FileInputStream(f))
+    val flen = f.length.toInt
+    val buf = new Array[Byte](flen)
+    
+    var (read, offset) = (0, 0)
+    while (read != flen) {
+      val count = fis.read(buf, offset, flen-offset)
+      read += count
+      offset += count
+    }
+    new String(buf, "UTF8")
+  }
+  
+  def writeFile(f: File, data: String)  {
+    val fos = new BufferedOutputStream(new FileOutputStream(f));
+    fos.write(data.getBytes)
+    fos.close
+    println("File written: " + f)
   }
   
   
   def main(args: Array[String]) {
-    walk("src", ".*\\.scala") { f => println(readFile(f))}
+    walk("src.copy", ".*\\.scala") { f => 
+      writeFile(f, readFile(f).replaceAll("package\\snet.xofar", "package com.kogics"))
+    }
   }
 }
