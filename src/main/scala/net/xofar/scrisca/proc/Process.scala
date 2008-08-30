@@ -68,13 +68,14 @@ object Process {
     (ret._1, ret._2, ret._3)
   }
   
-  def pipeExec(cmd: String): Unit = {
+  def pipeExec(cmd: String): Nothing = {
     val pb = new ProcessBuilder(split(cmd))
     pb.directory(".")
     pb.redirectErrorStream(false)
     pb.exec(Some(System.in), System.out, Some(System.err))
     // our system.in is gone with the dead execed proc; nothing to do but bail
     System.exit(0)
+    throw new RuntimeException("Should never get here")
   }
   
   private def split(cmd: String): Array[String] = cmd.split("\\s+")
