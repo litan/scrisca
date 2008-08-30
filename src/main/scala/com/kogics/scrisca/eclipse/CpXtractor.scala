@@ -12,7 +12,7 @@
  * rights and limitations under the License.
  *
  */
-package net.xofar.scrisca.eclipse
+package com.kogics.scrisca.eclipse
 import java.io.File
 import xml._
 
