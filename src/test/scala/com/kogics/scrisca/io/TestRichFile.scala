@@ -38,8 +38,8 @@ class TestRichFile {
   
   def readWriteTestHelper(data: String) {
     val f = File.createTempFile("scrisca", "dir")
-    f.writeFile(data)
-    val readData = f.readFile
+    f.write(data)
+    val readData = f.readAsString
     assertEquals(data, readData)
   }
 

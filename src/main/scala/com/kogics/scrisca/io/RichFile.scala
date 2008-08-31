@@ -21,22 +21,30 @@ object RichFile {
 }
 
 class RichFile(f: File) {
-  def readFile: String = {
+  def readAsString: String = {
     import java.nio.channels.FileChannel._
-    println("Reading file: " + f)
-    val flen = f.length.toInt
+//    println("Reading file: " + f)
+    val flen = f.length.toInt; val buf = new Array[Byte](flen)
     val fis = new FileInputStream(f)
-    val bbuf = fis.getChannel.map(MapMode.READ_ONLY, 0, flen)
-    val buf = new Array[Byte](flen)
-    bbuf.get(buf)
-    fis.close
-    new String(buf, "UTF8")
+    try {
+      val bbuf = fis.getChannel.map(MapMode.READ_ONLY, 0, flen)
+      bbuf.get(buf)
+      new String(buf, "UTF8")
+    }
+    finally {
+      fis.close // also closes channel
+    }
   }
   
-  def writeFile(data: String)  {
-    val fos = new BufferedOutputStream(new FileOutputStream(f));
-    fos.write(data.getBytes)
-    fos.close
-    println("File written: " + f)
+  def write(data: String)  {
+    import java.nio.channels.FileChannel._
+    val fos = new BufferedOutputStream(new FileOutputStream(f))
+    try {
+      fos.write(data.getBytes)
+//    println("File written: " + f)
+    }
+    finally {
+      fos.close
+    }
   }
 }

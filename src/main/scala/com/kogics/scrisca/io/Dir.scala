@@ -38,7 +38,7 @@ object Dir {
   
   def main(args: Array[String]) {
     walk("src", ".*\\.scala") { f =>
-      f.writeFile(f.readFile.replaceAll("net\\.xofar", "com.kogics"))
+      f.write(f.readAsString.replaceAll("net\\.xofar", "com.kogics"))
     }
   }
 }
