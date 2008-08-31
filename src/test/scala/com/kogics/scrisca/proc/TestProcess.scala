@@ -18,6 +18,7 @@ import org.junit._
 import org.junit.Assert._
 import java.io._
 import java.util.concurrent.CountDownLatch
+import TestData._
 
 class TestProcess {
   
@@ -93,28 +94,4 @@ class TestProcess {
     latch.await
     assertEquals(dataSet, new String(os.toByteArray, "UTF8"))
   }
-  
-  val smallDataset = "some random text;"
-  val mediumDataset = """some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;"""
-  
-  val largeDataset = """some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;some random text;some random text;some random text;
-                      some random text;"""
-  
 }

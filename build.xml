@@ -77,7 +77,7 @@
 	<target name="test" depends="compile">
 		<junit printsummary="yes" showoutput="yes" fork="yes" dir="${build.classes}">
 			<formatter type="plain" />
-			<test name="com.kogics.scrisca.proc.TestProcess" haltonfailure="yes" outfile="testreport" />
+			<test name="com.kogics.scrisca.AllTests" haltonfailure="yes" outfile="testreport" />
 			<classpath>
 				<path refid="test.classpath" />
 			</classpath>
