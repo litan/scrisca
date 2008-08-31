@@ -15,6 +15,7 @@
 package com.kogics.scrisca.io
 
 import java.io._
+import java.nio.ByteBuffer
 
 object RichFile {
   implicit def enrichFile(f: File) = new RichFile(f)
@@ -22,13 +23,12 @@ object RichFile {
 
 class RichFile(f: File) {
   def readAsString: String = {
-    import java.nio.channels.FileChannel._
 //    println("Reading file: " + f)
-    val flen = f.length.toInt; val buf = new Array[Byte](flen)
-    val fis = new FileInputStream(f)
+    val flen = f.length.toInt; val buf = new Array[Byte](flen); val bbuf = ByteBuffer.allocate(flen)
+    val fis = new FileInputStream(f); val fchannel = fis.getChannel
     try {
-      val bbuf = fis.getChannel.map(MapMode.READ_ONLY, 0, flen)
-      bbuf.get(buf)
+      while(bbuf.hasRemaining) fchannel.read(bbuf)
+      bbuf.flip; bbuf.get(buf)
       new String(buf, "UTF8")
     }
     finally {
@@ -37,7 +37,6 @@ class RichFile(f: File) {
   }
   
   def write(data: String)  {
-    import java.nio.channels.FileChannel._
     val fos = new BufferedOutputStream(new FileOutputStream(f))
     try {
       fos.write(data.getBytes)
