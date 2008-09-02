@@ -35,7 +35,14 @@ object Scalipse {
     
     val scalaArgs = sb.toString
     
-    val cmdLine = "scalac.bat" + scalaArgs + "-cp " + CpXtractor.extract(eclipseProjectLoc) + scalaFile
+    var cmdName = "" 
+    if(System.getProperty("os.name").contains("Windows")) 
+      cmdName = "scalac.bat"
+    else 
+      cmdName = "scalac"
+      
+    val cmdLine = cmdName + scalaArgs + "-cp " + CpXtractor.extract(eclipseProjectLoc) + scalaFile
+    
     // println("Scalac Wrapper Executing: " + cmdLine )
     
     val result = Process.exec(cmdLine, eclipseProjectLoc)
