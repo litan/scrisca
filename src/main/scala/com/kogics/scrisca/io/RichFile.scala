@@ -42,7 +42,6 @@ class RichFile(f: File) {
     val fos = new BufferedOutputStream(new FileOutputStream(f))
     try {
       fos.write(data.getBytes("UTF-8"))
-//    println("File written: " + f)
     }
     finally {
       fos.close

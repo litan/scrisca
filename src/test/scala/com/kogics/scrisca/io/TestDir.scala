@@ -21,8 +21,35 @@ import TestData._
 
 class TestDir {
   
+  val (f1, f2, f3, f4) = ("file1", "file2", "file3", "file4")
+  
   @Before
   def setup {
-    
+    new File("test-dir-tree/subdir1").mkdirs
+    new File("test-dir-tree/subdir1/" + f1).createNewFile
+    new File("test-dir-tree/subdir1/" + f2).createNewFile
+    new File("test-dir-tree/subdir2").mkdirs
+    new File("test-dir-tree/subdir2/" + f3).createNewFile
+    new File("test-dir-tree/subdir2/" + f4).createNewFile
+  }
+  
+  @Test
+  def test1 {
+    var files: List[String] = Nil
+    Dir.walk("test-dir-tree", ".*") { f =>
+      files = f.getName :: files
+    }
+    assertEquals(List("file1", "file2", "file3", "file4"), files.sort(_<_))
+  }
+  
+  @After
+  def teardown {
+    new File("test-dir-tree/subdir1/" + f1).delete
+    new File("test-dir-tree/subdir1/" + f2).delete
+    new File("test-dir-tree/subdir2/" + f3).delete
+    new File("test-dir-tree/subdir2/" + f4).delete
+    new File("test-dir-tree/subdir1").delete
+    new File("test-dir-tree/subdir2").delete
+    new File("test-dir-tree").delete
   }
 }
