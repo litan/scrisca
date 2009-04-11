@@ -19,6 +19,10 @@ import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 object Process {
 
+  implicit def dirName2dir(name: String): File = new File(name)
+  implicit def enrichProcessBuilder(pb: ProcessBuilder)= new RichProcessBuilder(pb)
+  implicit def byteArrayOs2String(bos: ByteArrayOutputStream): String = new String(bos.toByteArray(), "UTF8")
+  
   /**
    * Execs the process specified by the command. Returns the combined stdout and stderr 
    * as a String; also returns the exit code 
@@ -78,12 +82,13 @@ object Process {
     throw new RuntimeException("Should never get here")
   }
   
-  private def split(cmd: String): Array[String] = cmd.split("\\s+")
-
-  implicit def dirName2dir(name: String): File = new File(name)
-  implicit def enrichProcessBuilder(pb: ProcessBuilder)= new RichProcessBuilder(pb)
-  implicit def byteArrayOs2String(bos: ByteArrayOutputStream): String = new String(bos.toByteArray(), "UTF8")
-
+  private def split(cmd: String) = toJList(cmd.split("\\s+"))
+  
+  private def toJList[A](a: Array[A]): java.util.List[A] = {
+    val l = new java.util.ArrayList[A]();
+    a.foreach {l.add(_)}
+    l
+  }
   
   /**
    * Enriched Process Builder with exec methods that return process output and exit code

@@ -9,7 +9,11 @@ object EchoProcess {
     var line: String = null
     
     while ({line = in.readLine(); line != null}) {
-      out.print(line + "\n");
+      if(System.getProperty("os.name").contains("Windows")) {
+        out.print(line + "\r\n");  
+      } else {
+        out.print(line + "\n");
+      }
     }
     System.exit(0)
   }

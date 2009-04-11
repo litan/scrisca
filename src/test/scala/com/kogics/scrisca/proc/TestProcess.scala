@@ -81,8 +81,8 @@ class TestProcess {
   def echoDataTestHelper(dataSet: String) {
     val is = new ByteArrayInputStream(dataSet.getBytes("UTF8"))
     val out = Process.exec(echocmd, is)
-    assertEquals(dataSet, out._1.trim) // echo puts an extra newline at end
-    assertEquals(dataSet.size, out._1.size-1) // echo puts an extra newline at end
+    assertEquals(dataSet.trim, out._1.trim) // echo puts an extra newline at end
+    // assertEquals(dataSet.size, out._1.size-1) // echo puts an extra newline at end
   }
   
   def streamLinkTestHelper(dataSet: String) {

@@ -36,6 +36,17 @@ object Dir {
     }
   }
   
+  def walkd(root: String, pattern: String)(dh: (File => Unit)) {
+    val dir = new File(root);
+    if (!dir.exists) throw new IllegalArgumentException("Non existent dir: " + root)
+    walk(dir, pattern)(dh)
+  } 
+  
+  def walkd(file: File, pattern: String)(dh: (File => Unit)) {
+    if (file.isDirectory) 
+      dh(file)
+  }
+  
   def main(args: Array[String]) {
     walk("src", ".*\\.scala") { f =>
       f.write(f.readAsString.replaceAll("net\\.xofar", "com.kogics"))
