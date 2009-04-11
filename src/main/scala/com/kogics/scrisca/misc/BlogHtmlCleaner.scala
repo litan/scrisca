@@ -28,13 +28,13 @@ object BlogHtmlCleaner {
     }
 
     def cleanHtml(html: String) : String = {
-        val regex = """(<pre>)(.*?)(</pre>)"""
+        val regex = """(<pre.*?>)(.*?)(</pre>)"""
         regexReplace(html, regex, (x=>x), fixGenerics)
     }
 
     def fixGenerics(code : String) : String = {
         val regex = """(<)(.*?)(>)"""
-        regexReplace(code, regex, bracesFixer, capitalize)
+        regexReplace(code, regex, bracesFixer, (x=>x))
     }
 
     def bracesFixer(in: String) : String = in match {
@@ -47,8 +47,9 @@ object BlogHtmlCleaner {
         val p = Pattern.compile(regex, Pattern.DOTALL)
         val m = p.matcher(in)
         val sb = new StringBuffer
-        while (m.find())
-        m.appendReplacement(sb, fouter(m.group(1)) + finner(m.group(2)) + fouter(m.group(3)))
+        while (m.find()) {
+            m.appendReplacement(sb, fouter(m.group(1)) + finner(m.group(2)) + fouter(m.group(3)))
+        }
         m.appendTail(sb);
         return sb.toString()
     }
